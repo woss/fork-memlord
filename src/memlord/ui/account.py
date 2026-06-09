@@ -2,6 +2,7 @@ from fastapi import APIRouter, Form, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from memlord.auth import hash_password
+from memlord.dao.api_key import ApiKeyDao
 from memlord.dao.user import UserDao
 from memlord.db import APISessionDep
 
@@ -11,8 +12,9 @@ router = APIRouter(prefix="/account", tags=["UI"])
 
 
 @router.get("", response_class=HTMLResponse)
-async def account_get(request: Request, user: APIUserDep) -> HTMLResponse:
-    return templates.TemplateResponse(request, "account.html", {"user": user})
+async def account_get(request: Request, s: APISessionDep, user: APIUserDep) -> HTMLResponse:
+    api_keys = await ApiKeyDao(s).list_for_user(user.id)
+    return templates.TemplateResponse(request, "account.html", {"user": user, "api_keys": api_keys})
 
 
 @router.post("/display-name")
@@ -22,11 +24,13 @@ async def update_display_name(
     user: APIUserDep,
     display_name: str = Form(min_length=1),
 ) -> Response:
+    api_keys = await ApiKeyDao(s).list_for_user(user.id)
+
     def _err(msg: str) -> HTMLResponse:
         return templates.TemplateResponse(
             request,
             "account.html",
-            {"user": user, "name_error": msg},
+            {"user": user, "api_keys": api_keys, "name_error": msg},
             status_code=400,
         )
 
@@ -47,11 +51,13 @@ async def change_password(
     new_password: str = Form(min_length=6),
     new_password2: str = Form(min_length=6),
 ) -> Response:
+    api_keys = await ApiKeyDao(s).list_for_user(user.id)
+
     def _err(msg: str) -> HTMLResponse:
         return templates.TemplateResponse(
             request,
             "account.html",
-            {"user": user, "pw_error": msg},
+            {"user": user, "api_keys": api_keys, "pw_error": msg},
             status_code=400,
         )
 
@@ -73,11 +79,13 @@ async def delete_account(
     user: APIUserDep,
     confirm_password: str = Form(),
 ) -> Response:
+    api_keys = await ApiKeyDao(s).list_for_user(user.id)
+
     def _err(msg: str) -> HTMLResponse:
         return templates.TemplateResponse(
             request,
             "account.html",
-            {"user": user, "delete_error": msg},
+            {"user": user, "api_keys": api_keys, "delete_error": msg},
             status_code=400,
         )
 
