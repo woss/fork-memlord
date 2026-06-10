@@ -60,7 +60,7 @@ src/memlord/
 │   ├── search.py          # SearchResult, MemoryResult
 │   ├── store.py           # StoreResult
 │   ├── recall.py          # RecallResult
-│   ├── list_memories.py   # MemoryListItem, MemoryPage
+│   ├── list_memories.py   # MemoryItem, MemoryDetail, MemoryPage
 │   ├── delete.py          # DeleteResult
 │   ├── update.py          # UpdateMemoryRequest
 │   ├── health.py          # HealthResult
@@ -81,12 +81,12 @@ src/memlord/
 │   ├── __init__.py        # re-exports: mcp instances as named aliases
 │   ├── store.py           # store_memory → StoreResult
 │   ├── retrieve.py        # retrieve_memory → list[MemoryResult]
-│   ├── recall.py          # recall_memory → list[RecallResult]
+│   ├── recall.py          # recall_memory → RecallPage
 │   ├── list_memories.py   # list_memories → MemoryPage
-│   ├── get_memory.py      # get_memory → MemoryListItem
-│   ├── search_by_tag.py   # search_by_tag → list[MemoryListItem]
+│   ├── get_memory.py      # get_memory → MemoryDetail
+│   ├── search_by_tag.py   # search_by_tag → MemoryPage
 │   ├── delete.py          # delete_memory → DeleteResult
-│   ├── update.py          # update_memory → MemoryListItem
+│   ├── update.py          # update_memory → StoreResult
 │   ├── health.py          # check_database_health → HealthResult
 │   └── workspaces.py      # workspace tools (create, list, invite, join, leave)
 └── ui/
@@ -239,7 +239,7 @@ workspace resolved via `get_personal(uid)`. Unique constraint `(content, workspa
 via `<=>` (cosine distance). If `1 - distance >= dedup_threshold` — raises `ValueError` with the duplicate's `id` and
 similarity score. Skipped when `force=True`.
 
-**Returns:** `StoreResult` — `id`, `created` (bool).
+**Returns:** `StoreResult` — `name`, `created` (bool).
 
 ---
 
@@ -251,13 +251,13 @@ Hybrid semantic + full-text search.
 |------------------------|---------|---------|---------------------------------|
 | `query`                | string  | —       | Search query                    |
 | `limit`                | integer | 10      | Max results                     |
-| `similarity_threshold` | float   | 0.7     | Min cosine similarity (0.0–1.0) |
+| `similarity_threshold` | float   | 0.25    | Min cosine similarity (0.0–1.0) |
 | `memory_type`          | string  | ❌       | Filter by type                  |
 
 **Logic:** fetch user's `workspace_ids` → `hybrid_search` (personal + workspaces) → enrich with tags and metadata.
 
-**Returns:** `list[MemoryResult]` — `id`, `content`, `memory_type`, `tags`, `metadata`, `created_at`, `rrf_score`,
-`workspace_id`.
+**Returns:** `list[MemoryResult]` — `name`, `memory_type`, `tags`, `metadata`, `created_at`, `rrf_score`, `workspace`
+(no `id`, no `content`; call `get_memory(name)` for full content).
 
 ---
 
@@ -274,7 +274,8 @@ Time-based + semantic search in natural language.
 **Logic:** `dateparser.search_dates` extracts temporal expressions → `date_from`/`date_to` → `hybrid_search` with
 `similarity_threshold=0.0` and date filter. If no dates found — plain hybrid search.
 
-**Returns:** `list[RecallResult]` — `id`, `content`, `memory_type`, `tags`, `created_at`, `workspace_id`.
+**Returns:** `RecallPage` — `items: list[RecallResult]` (`name`, `memory_type`, `tags`, `created_at`, `workspace`; no
+`id`, no `content`).
 
 ---
 
@@ -358,9 +359,7 @@ Delete an entry by name.
 **Logic:** resolve name (+ optional workspace) → access check → DELETE from `memories` (CASCADE → `memory_tags`);
 `embedding` and `search_vector` are removed with the row.
 
-**Returns:** `DeleteResult` — `success`, `name`.
-
-**Returns:** `DeleteResult` — `success: bool`, `id`.
+**Returns:** `DeleteResult` — `success: bool`, `name`.
 
 ---
 
