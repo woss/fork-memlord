@@ -33,7 +33,7 @@ pgvector" width="100%">
 - 🌐 **Web UI** — browse, search, edit and delete memories in the browser; export/import JSON
 - 🔒 **OAuth 2.1** — full in-process authorization server, always enabled
 - 🐘 **PostgreSQL** — pgvector for embeddings, tsvector for full-text search
-- 📊 **Progressive disclosure** — search returns compact snippets by default; call `get_memory(id)` only for what you
+- 📊 **Progressive disclosure** — search returns compact snippets by default; call `get_memory(name)` only for what you
   need, reducing token usage
 - 🔁 **Deduplication** — automatically detects near-identical memories before saving, preventing noise accumulation
 
@@ -148,9 +148,9 @@ Set `MEMLORD_BASE_URL` to your public URL and change `MEMLORD_OAUTH_JWT_SECRET` 
 | `recall_memory`   | Search by natural-language time expression; returns snippets by default |
 | `list_memories`   | Paginated list with type/tag filters                                    |
 | `search_by_tag`   | AND/OR tag search                                                       |
-| `get_memory`      | Fetch a single memory by ID with full content                           |
-| `update_memory`   | Update content, type, tags, or metadata by ID                           |
-| `delete_memory`   | Delete by ID                                                            |
+| `get_memory`      | Fetch a single memory by name with full content                         |
+| `update_memory`   | Update content, type, tags, or metadata by name (and optionally rename) |
+| `delete_memory`   | Delete by name                                                          |
 | `move_memory`     | Move a memory to a different workspace                                  |
 | `list_workspaces` | List workspaces you are a member of (including personal)                |
 
