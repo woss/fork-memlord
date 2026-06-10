@@ -18,10 +18,10 @@ async def get_memory(
     s: AsyncSession = MCPSessionDep,  # type: ignore[assignment]
     uid: int = MCPUserDep,  # type: ignore[assignment]
 ) -> MemoryDetail:
-    """Fetch full content of a single memory by numeric ID.
+    """Fetch full content of a single memory by name.
 
-    Use only when you already know the ID — e.g. after retrieve_memory() or recall_memory()
-    which return IDs in their results alongside compact snippets.
+    Use only when you already know the name — e.g. after retrieve_memory() or recall_memory()
+    which return names in their results alongside compact snippets.
     Do NOT use for search — use retrieve_memory() for semantic/text search
     or recall_memory() for time-based queries like 'last week'.
     """

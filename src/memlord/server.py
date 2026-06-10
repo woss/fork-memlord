@@ -24,7 +24,7 @@ mcp: FastMCP = FastMCP(
         "based on context (personal by default). Use store_memory for facts, preferences, "
         "instructions, or feedback worth remembering. At the start of a session call "
         "recall_memory or retrieve_memory to surface relevant context. "
-        "Use get_memory(id) only when you need the full content of a specific memory — "
+        "Use get_memory(name) only when you need the full content of a specific memory — "
         "search results return snippets to save tokens."
     ),
     auth=MemlordOAuthProvider(

@@ -210,7 +210,7 @@ composite PK; `role` (default `member`), `joined_at`
 | `recall_memory`   | ✅    | ✅      | ✅ (+ date filter from natural language) |
 | `search_by_tag`   | —    | —      | — (tag filter only)                     |
 | `list_memories`   | —    | —      | — (date sort only)                      |
-| `get_memory`      | —    | —      | — (ID lookup only)                      |
+| `get_memory`      | —    | —      | — (name lookup only)                    |
 
 ---
 
@@ -280,19 +280,21 @@ Time-based + semantic search in natural language.
 
 ### `update_memory`
 
-Update an existing memory by ID.
+Update an existing memory identified by name. Only provided fields are changed.
 
-| Field         | Type     | Required | Description                     |
-|---------------|----------|----------|---------------------------------|
-| `id`          | integer  | ✅        | Entry ID                        |
-| `memory_type` | string   | ✅        | New type                        |
-| `content`     | string   | ❌        | New text (if changing)          |
-| `tags`        | string[] | ❌        | New tags (full replacement)     |
-| `metadata`    | object   | ❌        | New metadata (full replacement) |
+| Field         | Type     | Required | Description                              |
+|---------------|----------|----------|------------------------------------------|
+| `name`        | string   | ✅        | Memory name                              |
+| `memory_type` | string   | ✅        | New type                                 |
+| `content`     | string   | ❌        | New text (if changing)                   |
+| `new_name`    | string   | ❌        | Rename the memory to this name           |
+| `tags`        | string[] | ❌        | New tags (full replacement)              |
+| `metadata`    | object   | ❌        | New metadata (full replacement)          |
+| `workspace`   | string   | ❌        | Disambiguate if name exists in multiple  |
 
-**Logic:** access check (personal or in user's workspace) → update fields → regenerate embedding if `content` changed.
+**Logic:** resolve name (+ optional workspace) → access check → update fields → regenerate embedding if `content` changed.
 
-**Returns:** `StoreResult` — `id`, `created=False`.
+**Returns:** `StoreResult` — `name`, `created=False`.
 
 ---
 
@@ -309,7 +311,8 @@ Paginated list with filtering.
 
 **Logic:** SELECT with LIMIT/OFFSET, access filter (personal + workspaces), sorted by `created_at DESC`.
 
-**Returns:** `MemoryPage` — `items: list[MemoryListItem]`, `total`, `page`, `page_size`, `total_pages`.
+**Returns:** `MemoryPage` — `items: list[MemoryItem]`, `total`, `page`, `page_size`, `total_pages`. Each `MemoryItem`:
+`name`, `memory_type`, `metadata`, `tags`, `created_at`, `workspace` (no `id`, no `content`).
 
 ---
 
@@ -324,34 +327,38 @@ Tag search with boolean logic.
 
 **Logic:** `AND` — all tags present; `OR` — at least one. Access filter applied.
 
-**Returns:** `list[MemoryListItem]` — `id`, `content`, `memory_type`, `tags`, `created_at`, `workspace_id`.
+**Returns:** `MemoryPage` — `items: list[MemoryItem]` (`name`, `memory_type`, `metadata`, `tags`, `created_at`, `workspace`).
 
 ---
 
 ### `get_memory`
 
-Fetch a single entry by ID.
+Fetch a single entry by name.
 
-| Field | Type    | Description |
-|-------|---------|-------------|
-| `id`  | integer | Entry ID    |
+| Field       | Type   | Required | Description                             |
+|-------------|--------|----------|------------------------------------------|
+| `name`      | string | ✅        | Memory name                             |
+| `workspace` | string | ❌        | Disambiguate if name exists in multiple |
 
-**Logic:** access check (personal or in user's workspace).
+**Logic:** resolve name (+ optional workspace) → access check (personal or in user's workspace).
 
-**Returns:** `MemoryListItem` — `id`, `content`, `memory_type`, `tags`, `metadata`, `created_at`, `workspace_id`.
+**Returns:** `MemoryDetail` — `name`, `content`, `memory_type`, `metadata`, `tags`, `created_at`.
 
 ---
 
 ### `delete_memory`
 
-Delete an entry by ID.
+Delete an entry by name.
 
-| Field | Type    | Description |
-|-------|---------|-------------|
-| `id`  | integer | Entry ID    |
+| Field       | Type   | Required | Description                             |
+|-------------|--------|----------|------------------------------------------|
+| `name`      | string | ✅        | Memory name                             |
+| `workspace` | string | ❌        | Disambiguate if name exists in multiple |
 
-**Logic:** access check → DELETE from `memories` (CASCADE → `memory_tags`); `embedding` and `search_vector` are removed
-with the row.
+**Logic:** resolve name (+ optional workspace) → access check → DELETE from `memories` (CASCADE → `memory_tags`);
+`embedding` and `search_vector` are removed with the row.
+
+**Returns:** `DeleteResult` — `success`, `name`.
 
 **Returns:** `DeleteResult` — `success: bool`, `id`.
 
