@@ -75,7 +75,7 @@ src/memlord/
 │   └── dt.py              # date/time helpers
 ├── templates/             # Jinja2 templates (base, index, search, memory)
 ├── onnx/
-│   ├── model.onnx         # all-MiniLM-L6-v2 (excluded from git, see scripts/)
+│   ├── model.onnx         # paraphrase-multilingual-MiniLM-L12-v2 (excluded from git, see scripts/)
 │   └── tokenizer.json     # (excluded from git, see scripts/)
 ├── tools/
 │   ├── __init__.py        # re-exports: mcp instances as named aliases
@@ -136,7 +136,7 @@ Via `pydantic-settings`. Sources in priority order: environment variables (prefi
 `float32[384]` → `memories.embedding` (`vector(384)`, pgvector)
 
 Model files: `src/memlord/onnx/model.onnx`, `src/memlord/onnx/tokenizer.json` — excluded from git. Download before
-running: `uv run python scripts/download_model.py` (source: HuggingFace `sentence-transformers/all-MiniLM-L6-v2`).
+running: `uv run python scripts/download_model.py` (source: HuggingFace `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`).
 
 ---
 

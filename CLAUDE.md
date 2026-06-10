@@ -41,7 +41,7 @@ pytest tests/path/test_file.py::test_name -x
 
 **Search pipeline:** query → parallel BM25 (`search_vector @@ websearch_to_tsquery`) + vector KNN (`embedding <=>`, cosine distance) → Reciprocal Rank Fusion (`rrf = 1/(k+rank_bm25) + 1/(k+rank_vec)`, k=60) → top-N.
 
-**Embedding pipeline:** `content` → tokenizer.json → ONNX inference (all-MiniLM-L6-v2) → mean pooling with attention mask → L2 normalize → `float32[384]` stored as `vector(384)` column in `memories`.
+**Embedding pipeline:** `content` → tokenizer.json → chunk into overlapping 510-token windows (each wrapped in `<s>…</s>`) → batched ONNX inference (paraphrase-multilingual-MiniLM-L12-v2) → per-chunk mean pooling with attention mask + L2 normalize → average chunks → L2 normalize → `float32[384]` stored as `vector(384)` column in `memories`.
 
 **DB sync:** `search_vector` is a `TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED` computed column — updated automatically by PostgreSQL. `embedding` is updated manually by the application on write.
 
@@ -63,7 +63,7 @@ pytest tests/path/test_file.py::test_name -x
 
 **Config prefix:** All env vars use `MEMLORD_` prefix. `.env` file is supported.
 
-**ONNX model files** (`src/memlord/onnx/model.onnx`, `tokenizer.json`) are excluded from git. Download before running: `uv run python scripts/download_model.py`. Downloaded from `sentence-transformers/all-MiniLM-L6-v2` on HuggingFace.
+**ONNX model files** (`src/memlord/onnx/model.onnx`, `tokenizer.json`) are excluded from git. Download before running: `uv run python scripts/download_model.py`. Downloaded from `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` on HuggingFace.
 
 ## Project Layout
 
